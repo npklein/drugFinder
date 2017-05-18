@@ -1,0 +1,31 @@
+Package: drugFinder
+Title: Find drugs in the ConnectivityMap that induce your desired gene
+    expression.
+Version: 0.1
+Author: Niek de Klein
+Maintainer: Niek de Klein <niekdeklein@gmail.com>
+Description: This package takes micoarray data and a defined set of experiment
+    and control samples in that microarray data and finds the top differential
+    genes to make signatures from. Then, it uses these signatures to search the
+    ConnectivityMap for drugs that can possible induce the state of the
+    signatures.
+Depends:
+    R (>= 3.0.2),
+    hgu133a.db,
+    GO.db,
+    topGO,
+    clValid,
+    limma,
+    VennDiagram,
+    gplots,
+    ggplot2,
+    XLConnect,
+    reshape2,
+    findpython,
+    ArrayExpress,
+    affy,
+    mgcv,
+    Rgraphviz
+License: GPL-3
+LazyData: true
+Date: 2014-06-12
