@@ -1,3 +1,3 @@
 To install:
     
-    Rscript install_dependencies.R
+    install.packages('drugFinder.tar.gz',repo=NULL)
