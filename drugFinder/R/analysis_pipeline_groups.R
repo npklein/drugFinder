@@ -14,12 +14,12 @@
 #' @export
 #' 
 find_drugs <- function(microarray_data, datasets, outfolder_location_root, memory_limit=800000){
-  #find_python_cmd(minimum_version='3.0',required_modules=c('requests','html2text','argparse','urllib','bs4'))
+  t <- find_python_cmd(minimum_version='3.0',required_modules=c('requests','html2text','argparse','urllib','bs4'))
   if (substr(outfolder_location_root, nchar(outfolder_location_root), nchar(outfolder_location_root))!='/'){outfolder_location_root <-paste(outfolder_location_root,'/',sep='')}
   memory.limit(as.numeric(memory_limit))
   dir.create(outfolder_location_root, showWarnings = FALSE)
   rownames(microarray_data) <- make.names(microarray_data[,'Gene.Symbol'], unique=TRUE)
-  #check_mapping(conversion_table, outfolder_location_root)
+  check_mapping(conversion_table, outfolder_location_root)
   conversion_table <- conversion_table[,c('Gene.Symbol','entrez')]
   signatures <- list()
   signature_size <- list()
@@ -94,7 +94,7 @@ find_drugs <- function(microarray_data, datasets, outfolder_location_root, memor
       signature_affy_ids <- names(human_probes[human_probes==1])
       #################### functional enrichment stuff ######################
       enrichment_result <- enrichment(human_probes, paste(outfolder_location,'enrichment/',sep=""), signature$name)
-      enrichment_specificity <- GO_specificity(enrichment_result$GO_table)  
+      enrichment_specificity <- GO_specificity(enrichment_result$GO_table)
       enrichment_result$GO_full_results <- merge(enrichment_result$GO_table, enrichment_specificity,
                                  by.x=c('GO','ONTOLOGY'), by.y =c('GO.ID','ONTOLOGY'))
       signature_affy_names <- select(hgu133a.db, signature_affy_ids, c("ENTREZID","GENENAME"), "PROBEID")
@@ -104,6 +104,7 @@ find_drugs <- function(microarray_data, datasets, outfolder_location_root, memor
       enrichment_result$GO_full_results <- enrichment_result$GO_full_results[order(enrichment_result$GO_full_results$PROBEID),]
       enrichment_result$GO_full_results_IEA_filtered <- enrichment_result$GO_full_results[!enrichment_result$GO_full_results$EVIDENCE=='IEA',]
       ########################################################################
+      print('writing enrichment results')
       write.table(enrichment_result$GO_full_results_IEA_filtered, 
                   file=paste(outfolder_location,'signatures/go_terms_IEA_filtered/',signature$name,'_goterms_IEA_filtered.xls',sep=''),
                   sep='\t',row.names=FALSE,quote=FALSE)
@@ -118,14 +119,21 @@ find_drugs <- function(microarray_data, datasets, outfolder_location_root, memor
       ######################################################################
       
       ################### connectivity map stuf ##################
+      print('starting connectivity map')
       make_grp_files(signature, entrez_id__to__affy_id, conversion_table, paste(outfolder_location,'grp_files/',sep=""), cmap_ids)
       up_grp = paste(outfolder_location,'grp_files/',signature$name,'_up.grp',sep='')
       down_grp = paste(outfolder_location,'grp_files/',signature$name,'_down.grp',sep='')
       get_connectivityMap(up_grp, down_grp, signature$name, outfolder_detailed, outfolder_permuted)
-      connectivity_detailed_result <- read_connectivityMap_detailed(paste(outfolder_location,'connectivity_map/detailed_results/',signature$name,'.xls',sep=""), signature$name)
-      connectivity_permuted_result <- read_connectivityMap_permuted(paste(outfolder_location,'connectivity_map/permuted_results/',signature$name,'.xls',sep=""), signature$name)
+      connectivity_result <- paste0(outfolder_location,'connectivity_map/detailed_results/',signature$name,'.xls')
+      connectivity_result_permuted <- paste0(outfolder_location,'connectivity_map/permuted_results/',signature$name,'.xls')
+      print(paste('Connectivity map done, reading results from',connectivity_result,'and',connectivity_result_permuted))
+      connectivity_detailed_result <- read_connectivityMap_detailed(connectivity_result, signature$name)
+      print('Reading detailed result done')
+      connectivity_permuted_result <- read_connectivityMap_permuted(connectivity_result_permuted, signature$name)
+      print('Reading permuted result done')
       #plot_detailed_connectivity_results(connectivity_detailed_result, paste(outfolder_location,'connectivity_map/',sep=''), signature$name)
       #plot_permuted_connectivity_results(connectivity_permuted_result, paste(outfolder_location,'connectivity_map/',sep=''), signature$name)
+      
       cmap_detailed_results[[length(cmap_detailed_results)+1]] <- connectivity_detailed_result
       cmap_permuted_results_by_name[[length(cmap_permuted_results_by_name)+1]] <- connectivity_permuted_result$by_name
       cmap_permuted_results_by_celltype[[length(cmap_permuted_results_by_celltype)+1]] <- connectivity_permuted_result$by_celltype
@@ -139,9 +147,8 @@ find_drugs <- function(microarray_data, datasets, outfolder_location_root, memor
       #par(mar=c(5,18,4,2) + 0.1)
       #barplot(signature_lengths$values, names.arg=signature_lengths$ind, horiz=TRUE, las=2)
       #graphics.off()
-      print(paste('figure written to', outfolder_location,'signature_lengths.png',sep=''))
+      #print(paste('figure written to', outfolder_location,'signature_lengths.png',sep=''))
     }
-    print(head(enrichment_list[[1]]))
     enrichment_overlap(enrichment_list,ylab='',colnames=TRUE,
                        outfolder_location=paste(outfolder_location,'enrichment/overlap/',sep=""),
                        GO_results_name='GO_full_results')
@@ -175,7 +182,7 @@ library(Rgraphviz)
 source('GO_specificity.R')
 source('enrichment.R')
 source('rank_product_p.R')
-load('INFUSED_microarray_data.Rdata')
+lapply(Sys.glob("*RData"), load,.GlobalEnv)
 source('gene_signature_similarity.R')
 source('selections.R')
 source('atc_info.R')
@@ -194,5 +201,38 @@ source('drugbank.R')
 source('plots.R')
 source('webpage.R')
 
-find_drugs(INFUSED_microarray_data, infused_datalist, '/Users/NPK/Dropbox/Luxembourg/test')
+
+
+
+
+sham3 <- c('Sham3.r1', 'Sham3.r2', 'Sham3.r3')
+sham3 <- c('Sham3.r1', 'Sham3.r2', 'Sham3.r3')
+hour4 <- c('T00d4h.r2', 'T00d4h.r3', 'T00d4h.r4')
+day1  <- c('T01d.r1', 'T01d.r2', 'T01d.r4')
+day3  <- c('T03d.r1', 'T03d.r2', 'T03d.r3')
+day7  <- c('T07d.r1', 'T07d.r2', 'T07d.r3')
+day14 <- c('T14d.r1', 'T14d.r2', 'T14d.r3')
+columns <- c(day1, day3, sham3)
+f <- factor(as.character(c(
+  'SECOND','SECOND','SECOND',
+  'SECOND','SECOND','SECOND',
+  'FIRST','FIRST','FIRST')))
+day1_day3__sham3 <- list(columns=columns, f=f, name1='day1_day3', name2='sham3')
+columns <- c(day7, day14,sham3)
+f <- factor(as.character(c(
+  'SECOND','SECOND','SECOND',
+  'SECOND','SECOND','SECOND',
+  'FIRST','FIRST','FIRST')))
+day7_day14__sham3 <- list(columns=columns, f=f, name1='day7_day14', name2='sham3')
+columns <- c(day1, day3, hour4)
+f <- factor(as.character(c(
+  'SECOND','SECOND','SECOND',
+  'SECOND','SECOND','SECOND',
+  'FIRST','FIRST','FIRST')))
+day1_day3__hour4 <- list(columns=columns, f=f, name1='day1_day3', name2='hour4')
+datasets <- list('signature_group_1'=list(day1_day3__sham3,day7_day14__sham3),
+                 'signature_group_2'=list(day1_day3__hour4
+                 ))
+
+find_drugs(INFUSED_microarray_data, datasets, '/tmp/')
 

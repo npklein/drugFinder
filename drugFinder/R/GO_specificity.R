@@ -61,6 +61,7 @@ GO_specificity <- function(GO_dataframe){
   	results[i,] <- c(GO_ID, GO_proportion, GO_dataframe[index,]$ONTOLOGY)
   	i <- i+1
   }
+  print('Done calculating specificity, returing results')
   return(data.frame(results))
 }
 #write.table(results, file = 'Function specificity.txt', sep='\t', col.names=T, row.names=F)

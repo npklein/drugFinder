@@ -1,8 +1,7 @@
 
 get_connectivityMap <- function(up_grp, down_grp, signature_name, outfolder_detailed, outfolder_permuted){
   python_location <- find_python_cmd(minimum_version='3.0',required_modules=c('requests','re','html2text','argparse','http.cookiejar','urllib','bs4'))
-  py_loc = paste(python_location,system.file('exec', 'connectivityMap.py', package='drugFinder'))
-  py_loc = 'python3 /Users/NPK/Dropbox/Luxembourg/Data/R_data/drugFinder_no_plots/exec/connectivityMap.py'
+  py_loc = paste(python_location,'connectivityMap.py')
   outfile_detailed = paste(outfolder_detailed,signature_name,'.xls',sep="")
   outfile_permuted = paste(outfolder_permuted,signature_name,'.xls',sep="")
   # the read.tables are to check that the file is not empty
@@ -16,6 +15,7 @@ get_connectivityMap <- function(up_grp, down_grp, signature_name, outfolder_deta
 }
 
 read_connectivityMap_detailed <- function(filename,signature_name){
+  print(paste('Load workbook', filename))
   wb <- loadWorkbook(filename)
   connectivity_result <- readWorksheet(wb, 1, header = TRUE)
   connectivity_result$signature_name <- rep_len(signature_name, dim(connectivity_result)[1])

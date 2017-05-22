@@ -120,14 +120,14 @@ plot_detailed_connectivity_results <- function(connectivity_data_frame, outfolde
     #plot(as.numeric(gsub("\\D", "", connectivity_data_frame$dose)), connectivity_data_frame$score,
     #     xlab='Dose in micro Liter', ylab='Connectivity score', main=signature_name)
     #graphics.off()
-    print(paste('png written to',outfile))
+  #  print(paste('png written to',outfile))
   
   outfile <- paste(outfolder,'up_vs_down/', signature_name,'.png', sep="")
     #Cairo_png(filename=outfile, width=13, height=11)                    
     #plot(connectivity_data_frame$down, connectivity_data_frame$up,
     #     xlab='up score', ylab='down score', main=signature_name)
     #graphics.off()
-    print(paste('png written to',outfile))
+  #  print(paste('png written to',outfile))
 }
 
 #' Plot results from the permuted connectivity results page
@@ -146,28 +146,28 @@ plot_permuted_connectivity_results <- function(connectivity_data_frame, outfolde
       #plot(connectivity_data_frame[[result_type]]$mean[order(connectivity_data_frame[[result_type]]$mean,decreasing=TRUE)], xlab='Instances',
       #     ylab='Mean connectivity score',main=signature_name)
       #graphics.off()
-      print(paste('png written to',outfile))
+     # print(paste('png written to',outfile))
     
     dir.create(paste(outfolder,result_type_folder,'/enrichment/',sep=""), showWarnings = FALSE)
     outfile <- paste(outfolder,result_type_folder,'/enrichment/', signature_name,'.png', sep="")
       #Cairo_png(filename=outfile, width=13, height=11)                    
       #plot(connectivity_data_frame[[result_type]]$enrichment[order(connectivity_data_frame[[result_type]]$enrichment)], xlab='Instances', ylab='Enrichment', main=signature_name)
       #graphics.off()
-      print(paste('png written to',outfile))
+    #  print(paste('png written to',outfile))
     
     dir.create(paste(outfolder,result_type_folder,'/p_value/',sep=""), showWarnings = FALSE)
     outfile <- paste(outfolder,result_type_folder,'/p_value/', signature_name,'.png', sep="")
       #Cairo_png(filename=outfile, width=13, height=11)                    
       #plot(unique(connectivity_data_frame[[result_type]]$p[order(connectivity_data_frame[[result_type]]$p)]), xlab='Instances', ylab='p-value', main=signature_name)
       #graphics.off()
-      print(paste('png written to',outfile))
+    #  print(paste('png written to',outfile))
     dir.create(paste(outfolder,result_type_folder,'/specificity/',sep=""), showWarnings = FALSE)
     outfile <- paste(outfolder,result_type_folder,'/specificity/', signature_name,'.png', sep="")
       #Cairo_png(filename=outfile, width=13, height=11)                    
       #plot(unique(connectivity_data_frame[[result_type]]$specificity[order(connectivity_data_frame[[result_type]]$specificity)]), xlab='Instances', 
       #     ylab='specificity', main=signature_name)
       #graphics.off()
-      print(paste('png written to',outfile))
+    #  print(paste('png written to',outfile))
     
     dir.create(paste(outfolder,result_type_folder,'/non_null/',sep=""), showWarnings = FALSE)
     outfile <- paste(outfolder,result_type_folder,'/non_null/', signature_name,'.png', sep="")
@@ -175,7 +175,7 @@ plot_permuted_connectivity_results <- function(connectivity_data_frame, outfolde
       #plot(connectivity_data_frame[[result_type]]$percent.non.null[order(connectivity_data_frame[[result_type]]$percent.non.null)],
       #     xlab='Instances', ylab='% non null', main=signature_name)
       #graphics.off()
-      print(paste('png written to',outfile))
+    #  print(paste('png written to',outfile))
     
     dir.create(paste(outfolder,result_type_folder,'/mean_vs_enrichment/',sep=""), showWarnings = FALSE)
     outfile <- paste(outfolder,result_type_folder,'/mean_vs_enrichment/', signature_name,'.png', sep="")
@@ -183,7 +183,7 @@ plot_permuted_connectivity_results <- function(connectivity_data_frame, outfolde
       #plot(connectivity_data_frame[[result_type]]$mean, connectivity_data_frame[[result_type]]$enrichment,
       #     xlab='Mean connectivity score', ylab='Enrichment', main=signature_name)
       #graphics.off()
-      print(paste('png written to',outfile))
+   #   print(paste('png written to',outfile))
     
     dir.create(paste(outfolder,result_type_folder,'/enrichment_vs_p_value/',sep=""), showWarnings = FALSE)
     outfile <- paste(outfolder,result_type_folder,'/enrichment_vs_p_value/', signature_name,'.png', sep="")
@@ -191,7 +191,7 @@ plot_permuted_connectivity_results <- function(connectivity_data_frame, outfolde
       #plot(connectivity_data_frame[[result_type]]$enrichment, connectivity_data_frame[[result_type]]$p,
       #     xlab='Enrichment', ylab='p-value', main=signature_name)
       #graphics.off()
-      print(paste('png written to',outfile))
+   #   print(paste('png written to',outfile))
     
     dir.create(paste(outfolder,result_type_folder,'/p_value_vs_specificity/',sep=""), showWarnings = FALSE)
     outfile <- paste(outfolder,result_type_folder,'/p_value_vs_specificity/', signature_name,'.png', sep="")
@@ -199,7 +199,7 @@ plot_permuted_connectivity_results <- function(connectivity_data_frame, outfolde
       #try(plot(connectivity_data_frame[[result_type]]$p, connectivity_data_frame[[result_type]]$specificity,
       #     xlab='p-value', ylab='specificity', main=signature_name))
       #graphics.off()
-      print(paste('png written to',outfile))
+    #  print(paste('png written to',outfile))
     
     dir.create(paste(outfolder,result_type_folder,'/mean__pvalue_filtered/',sep=""), showWarnings = FALSE)
     outfile <- paste(outfolder,result_type_folder,'/mean__pvalue_filtered/', signature_name,'.png', sep="")
