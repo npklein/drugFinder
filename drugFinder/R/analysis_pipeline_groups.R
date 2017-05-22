@@ -1,3 +1,19 @@
+library(hgu133a.db)
+library(GO.db)
+library(topGO)
+library(clValid)
+library(limma)
+library(VennDiagram)
+library(gplots)
+library(ggplot2)
+library(XLConnect)
+library(reshape2)
+library(findpython)
+library(ArrayExpress)
+library(affy)
+library(mgcv)
+library(Rgraphviz)
+
 #' Find candidate drugs
 #' 
 #' Takes in a zebrafish microarray dataset and which samples are control and desired,
@@ -19,18 +35,20 @@ find_drugs <- function(microarray_data, datasets, outfolder_location_root, memor
   memory.limit(as.numeric(memory_limit))
   dir.create(outfolder_location_root, showWarnings = FALSE)
   rownames(microarray_data) <- make.names(microarray_data[,'Gene.Symbol'], unique=TRUE)
-  check_mapping(conversion_table, outfolder_location_root)
+  #check_mapping(conversion_table, outfolder_location_root)
   conversion_table <- conversion_table[,c('Gene.Symbol','entrez')]
   signatures <- list()
   signature_size <- list()
   for (input_dataset_name in names(datasets)){
     #if (length(datasets[[input_dataset_name]]) < 2){stop(paste('Signature group',input_dataset_name,'has less than 2 signatures. Each signature group needs at least 2 signatures to work'))}
-    print(paste('Working on group',input_dataset_name))
+    print(paste('Processing group',input_dataset_name))
     outfolder_location <- paste(outfolder_location_root,gsub('\\s','', input_dataset_name),'/',sep='')
+    print('Creating dir structure')
     create_folders(outfolder_location)
     for (input_data in datasets[[input_dataset_name]]){
       name1 = input_data$name1
       name2_original = input_data$name2
+      print('Making selection list')
       selection_list <- gene_selections(microarray_data, input_data)
       for(selection_method in names(selection_list$genes)){
         geneSel <- selection_list[['genes']][[selection_method]]
@@ -164,75 +182,58 @@ find_drugs <- function(microarray_data, datasets, outfolder_location_root, memor
   }
 }
 
-library(hgu133a.db)
-library(GO.db)
-library(topGO)
-library(clValid)
-library(limma)
-library(VennDiagram)
-library(gplots)
-library(ggplot2)
-library(XLConnect)
-library(reshape2)
-library(findpython)
-library(ArrayExpress)
-library(affy)
-library(mgcv)
-library(Rgraphviz)
-source('GO_specificity.R')
-source('enrichment.R')
-source('rank_product_p.R')
-lapply(Sys.glob("*RData"), load,.GlobalEnv)
-source('gene_signature_similarity.R')
-source('selections.R')
-source('atc_info.R')
-source('libraries_and_sources.R')
-source('stability_validity_text.R')
-source('check_mapping.R')
-source('load_reference.R')
-source('summarize.R')
-source('connectivityMap.R')
-source('locations.R')
-source('validity_stability.R')
-source('create_folders.R')
-source('output.R')
-#source('volcano_plot.R')
-source('drugbank.R')
-source('plots.R')
-source('webpage.R')
+
+
+for (f in list.files(pattern="*.R")) {
+  if(f=="analysis_pipeline_groups.R"){next}
+  print(f)
+  source(f)
+}
+
+#### Step 1: Read in data. In this case we will use "airway" data from bioconductor
+count_data <- read.table('/Users/NPK/UMCG/git_projects/drug_prediction/example_data.txt',quote='',sep="\t",header=T)
+
+#### Step 2: Define first signature signatures
+
+# select which columns to use (these column names have to exist in the input data from Step 1)
+columns <- c('measured.1','measured.2','measured.3','control.1', 'control.2','control.3')
+# define which columns belong to the same group (e.g. control vs measured) by 
+# setting FIRST and SECOND. In this case control.1 + control.2 are group FIRST,
+# measured.1 is group SECOND
+sample_factor <- factor(as.character(c(
+  'SECOND','SECOND','SECOND','FIRST','FIRST','FIRST')
+))
+# add the data together to define the signature. name1 is the name of the first group of the signature
+# name2 is the name of the second signature. The combination of these will be used for output names
+# of files
+signature_1 <- list(columns=columns, f=sample_factor, name1='measured.1_measured.2_measured.3', name2='control.1_control.2_control.3')
+
+
+#### Step 3: Do the same thing for other signatures you might want to use
+
+# second signature
+columns <- c('measured.1','measured.2','control.1', 'control.2')
+sample_factor <- factor(as.character(c(
+  'SECOND','SECOND','FIRST','FIRST')
+))
+signature_2 <- list(columns=columns, f=sample_factor, name1='measured.2', name2='control.1_control.2')
+
+# third signature
+columns <- c('measured.1','measured.2','measured.3','measured.4','control.1', 'control.2','control.3','control.4')
+sample_factor <- factor(as.character(c(
+  'SECOND','SECOND','SECOND','SECOND','FIRST','FIRST','FIRST','FIRST')
+))
+signature_3 <- list(columns=columns, f=sample_factor, name1='all_measurements', name2='all_controls')
+
+#### Step 4: Combine the signatures into groups that belong together. 
+####         E.g. I want to search with signature 1 + signature 2 and
+####              with signature 3
+datasets <- list('signature_group_1'=list(signature_1, signature_2),
+                 'signature_group_2'=list(signature_3))
+
+#### Step 4: Search for drugs
+find_drugs(count_data, datasets, '/tmp/')
 
 
 
-
-
-sham3 <- c('Sham3.r1', 'Sham3.r2', 'Sham3.r3')
-sham3 <- c('Sham3.r1', 'Sham3.r2', 'Sham3.r3')
-hour4 <- c('T00d4h.r2', 'T00d4h.r3', 'T00d4h.r4')
-day1  <- c('T01d.r1', 'T01d.r2', 'T01d.r4')
-day3  <- c('T03d.r1', 'T03d.r2', 'T03d.r3')
-day7  <- c('T07d.r1', 'T07d.r2', 'T07d.r3')
-day14 <- c('T14d.r1', 'T14d.r2', 'T14d.r3')
-columns <- c(day1, day3, sham3)
-f <- factor(as.character(c(
-  'SECOND','SECOND','SECOND',
-  'SECOND','SECOND','SECOND',
-  'FIRST','FIRST','FIRST')))
-day1_day3__sham3 <- list(columns=columns, f=f, name1='day1_day3', name2='sham3')
-columns <- c(day7, day14,sham3)
-f <- factor(as.character(c(
-  'SECOND','SECOND','SECOND',
-  'SECOND','SECOND','SECOND',
-  'FIRST','FIRST','FIRST')))
-day7_day14__sham3 <- list(columns=columns, f=f, name1='day7_day14', name2='sham3')
-columns <- c(day1, day3, hour4)
-f <- factor(as.character(c(
-  'SECOND','SECOND','SECOND',
-  'SECOND','SECOND','SECOND',
-  'FIRST','FIRST','FIRST')))
-day1_day3__hour4 <- list(columns=columns, f=f, name1='day1_day3', name2='hour4')
-datasets <- list('signature_group_1'=list(day1_day3__sham3,day7_day14__sham3),
-                 'signature_group_2'=list(day1_day3__hour4
-                 ))
-
-find_drugs(INFUSED_microarray_data, datasets, '/tmp/')
 

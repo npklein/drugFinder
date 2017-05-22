@@ -9,6 +9,8 @@
 #' @return Differential genes (from the signature)
 #' 
 gene_selections <- function(microarray_data, input_data, strict=TRUE, half_strict=FALSE, relaxed=FALSE){
+  print('Selecting columns:')
+  print(input_data$columns)
   zebrafish_expression  <- microarray_data[,input_data$columns]
   zebrafish_matrix <- data.matrix(zebrafish_expression)
   f = input_data$f
@@ -36,6 +38,7 @@ gene_selections <- function(microarray_data, input_data, strict=TRUE, half_stric
   if(relaxed == TRUE){
     genes$relaxed <- zebrafishSel
   }
+  print(genes)
    return(list(genes=genes, f=f, 
               fit=fit,gene_list=gene_list))
 }

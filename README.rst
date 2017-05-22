@@ -1,3 +1,3 @@
-To install the necesarry dependencies, run install_dependencies.R with
+To install:
     
     Rscript install_dependencies.R
