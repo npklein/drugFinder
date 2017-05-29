@@ -1,7 +1,8 @@
 
 get_atc_info <- function(atc_codes_file,outfile_full_name,outfile_description){
   python_location <- find_python_cmd(minimum_version='3.0',required_modules=c('requests','re','html2text','argparse','http.cookiejar','urllib','bs4'))
-  py_loc = paste(python_location, 'atc_info.py')
+  script_location <- paste(system.file(package="drugFinder"), "atc_info.py", sep="/")
+  py_loc = paste(python_location,script_location)
   if((!file.exists(outfile_full_name) || !file.exists(outfile_description))){
      command <- paste(py_loc,'-a',atc_codes_file,'-o',outfile_full_name,'-d',outfile_description)
      print(command)

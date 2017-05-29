@@ -1,7 +1,7 @@
 Package: drugFinder
 Title: Find drugs in the ConnectivityMap that induce your desired gene
     expression.
-Version: 0.9
+Version: 0.9.1
 Author: Niek de Klein
 Maintainer: Niek de Klein <niekdeklein@gmail.com>
 Description: This package takes micoarray data and a defined set of experiment
@@ -12,8 +12,6 @@ Description: This package takes micoarray data and a defined set of experiment
 Depends:
     R (>= 3.0.2),
     hgu133a.db,
-    GO.db,
-    topGO,
     clValid,
     limma,
     VennDiagram,

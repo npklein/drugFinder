@@ -1,7 +1,8 @@
 
 get_drugbank_info <- function(drugnames_file,outfile){
   python_location <- find_python_cmd(minimum_version='3.0',required_modules=c('requests','re','html2text','argparse','http.cookiejar','urllib','bs4'))
-  py_loc = paste(python_location, 'drugbank.py')
+  script_location <- paste(system.file(package="drugFinder"), "drugbank.py", sep="/")
+  py_loc = paste(python_location,script_location)
   if(!file.exists(outfile)){
      command <- paste(py_loc,'-i',drugnames_file,'-o',outfile)
      print(command)

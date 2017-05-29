@@ -1,6 +1,4 @@
 library(hgu133a.db)
-library(GO.db)
-library(topGO)
 library(clValid)
 library(limma)
 library(VennDiagram)
@@ -35,12 +33,10 @@ find_drugs <- function(microarray_data, datasets, outfolder_location_root, memor
   memory.limit(as.numeric(memory_limit))
   dir.create(outfolder_location_root, showWarnings = FALSE)
   rownames(microarray_data) <- make.names(microarray_data[,'Gene.Symbol'], unique=TRUE)
-  #check_mapping(conversion_table, outfolder_location_root)
   conversion_table <- conversion_table[,c('Gene.Symbol','entrez')]
   signatures <- list()
   signature_size <- list()
   for (input_dataset_name in names(datasets)){
-    #if (length(datasets[[input_dataset_name]]) < 2){stop(paste('Signature group',input_dataset_name,'has less than 2 signatures. Each signature group needs at least 2 signatures to work'))}
     print(paste('Processing group',input_dataset_name))
     outfolder_location <- paste(outfolder_location_root,gsub('\\s','', input_dataset_name),'/',sep='')
     print('Creating dir structure')
@@ -48,7 +44,7 @@ find_drugs <- function(microarray_data, datasets, outfolder_location_root, memor
     for (input_data in datasets[[input_dataset_name]]){
       name1 = input_data$name1
       name2_original = input_data$name2
-      print('Making selection list')
+      print('Selecting genes for signature')
       selection_list <- gene_selections(microarray_data, input_data)
       for(selection_method in names(selection_list$genes)){
         geneSel <- selection_list[['genes']][[selection_method]]
@@ -67,19 +63,10 @@ find_drugs <- function(microarray_data, datasets, outfolder_location_root, memor
         gene_list_down <- gene_list[gene_list$logFC < 0,]
         geneSel_id <- as.character(geneSel_id[!is.na(geneSel_id)])
         print(paste('length signature:',length(geneSel_id)))
-        #if(length(geneSel_id)<40){
         signatures[[paste(name1,'__',all_locations$name2,sep='')]] <- list(gene_list=gene_list,gene_ids=geneSel_id, 
                                                             name=paste(name1,"__",all_locations$name2,sep=""),
                                                             gene_list_down=gene_list_down,gene_list_up=gene_list_up,
                                                             gene_list_complete=selection_list$gene_list)
-        #}    
-        write_summary(outfolder_location, geneSel, geneSel_id, name1, all_locations$name2)
-        #plot_results(name1=name1, name2=all_locations$name2, geneSel=geneSel, 
-        #             heatmap_location=all_locations$heatmap_location, 
-        #             dendogram_location_samples=all_locations$dendogram_location_samples, 
-        #             dendogram_location_genes=all_locations$dendogram_location_genes, 
-        #             volcano_location=all_locations$volcano_location, 
-        #             f=selection_list$f, fit=selection_list$fit)
       }
     }
 
@@ -97,7 +84,6 @@ find_drugs <- function(microarray_data, datasets, outfolder_location_root, memor
     cmap_permuted_results_by_name <- list()
     cmap_permuted_results_by_celltype <- list()
     cmap_permuted_results_by_ATC <- list()
-    enrichment_list <- list()
     terms_entrez <- list()
     sets_entrez <- list()
     terms_affy <- list()
@@ -110,31 +96,9 @@ find_drugs <- function(microarray_data, datasets, outfolder_location_root, memor
       sets_affy[[signature$name]] <- unique(signature_to_affy$affy_id)
       human_probes[intersect(names(human_probes), signature_to_affy$affy_id)] <- 1
       signature_affy_ids <- names(human_probes[human_probes==1])
-      #################### functional enrichment stuff ######################
-      enrichment_result <- enrichment(human_probes, paste(outfolder_location,'enrichment/',sep=""), signature$name)
-      enrichment_specificity <- GO_specificity(enrichment_result$GO_table)
-      enrichment_result$GO_full_results <- merge(enrichment_result$GO_table, enrichment_specificity,
-                                 by.x=c('GO','ONTOLOGY'), by.y =c('GO.ID','ONTOLOGY'))
       signature_affy_names <- select(hgu133a.db, signature_affy_ids, c("ENTREZID","GENENAME"), "PROBEID")
-      enrichment_result$GO_full_results <- merge(enrichment_result$GO_full_results, signature_affy_names,
-                                                 by='PROBEID')
-      enrichment_result$GO_full_results <- unique(enrichment_result$GO_full_results[,c(1,4,3,2,8,5,7,8)])
-      enrichment_result$GO_full_results <- enrichment_result$GO_full_results[order(enrichment_result$GO_full_results$PROBEID),]
-      enrichment_result$GO_full_results_IEA_filtered <- enrichment_result$GO_full_results[!enrichment_result$GO_full_results$EVIDENCE=='IEA',]
-      ########################################################################
-      print('writing enrichment results')
-      write.table(enrichment_result$GO_full_results_IEA_filtered, 
-                  file=paste(outfolder_location,'signatures/go_terms_IEA_filtered/',signature$name,'_goterms_IEA_filtered.xls',sep=''),
-                  sep='\t',row.names=FALSE,quote=FALSE)
-      write.table(enrichment_result$GO_full_results, file=paste(outfolder_location,'signatures/go_terms/',signature$name,'_goterms.xls',sep=''),
-                                                         sep='\t',row.names=FALSE,quote=FALSE)
-    
-      write.table(signature_affy_names, file=paste(outfolder_location,'signatures/affy_ids/',signature$name,'_affy_ids.xls',sep=''),
-                  sep='\t',row.names=FALSE,quote=FALSE)
-      enrichment_list [[signature$name]] <- enrichment_result
       # don't forget to set everything back to 0
       human_probes[intersect(names(human_probes), signature_to_affy$affy_id)] <- 0
-      ######################################################################
       
       ################### connectivity map stuf ##################
       print('starting connectivity map')
@@ -149,9 +113,7 @@ find_drugs <- function(microarray_data, datasets, outfolder_location_root, memor
       print('Reading detailed result done')
       connectivity_permuted_result <- read_connectivityMap_permuted(connectivity_result_permuted, signature$name)
       print('Reading permuted result done')
-      #plot_detailed_connectivity_results(connectivity_detailed_result, paste(outfolder_location,'connectivity_map/',sep=''), signature$name)
-      #plot_permuted_connectivity_results(connectivity_permuted_result, paste(outfolder_location,'connectivity_map/',sep=''), signature$name)
-      
+
       cmap_detailed_results[[length(cmap_detailed_results)+1]] <- connectivity_detailed_result
       cmap_permuted_results_by_name[[length(cmap_permuted_results_by_name)+1]] <- connectivity_permuted_result$by_name
       cmap_permuted_results_by_celltype[[length(cmap_permuted_results_by_celltype)+1]] <- connectivity_permuted_result$by_celltype
@@ -159,20 +121,7 @@ find_drugs <- function(microarray_data, datasets, outfolder_location_root, memor
       #############################################################
     }
     
-    signature_lengths <- stack(lapply(sets_entrez, function(x) length(x)))
-    if(!file.exists(paste(outfolder_location,'signature_lengths.png',sep=''))){
-      #Cairo_png(filename=paste(outfolder_location,'signature_lengths.png',sep=''), width=15, height=11)
-      #par(mar=c(5,18,4,2) + 0.1)
-      #barplot(signature_lengths$values, names.arg=signature_lengths$ind, horiz=TRUE, las=2)
-      #graphics.off()
-      #print(paste('figure written to', outfolder_location,'signature_lengths.png',sep=''))
-    }
-    enrichment_overlap(enrichment_list,ylab='',colnames=TRUE,
-                       outfolder_location=paste(outfolder_location,'enrichment/overlap/',sep=""),
-                       GO_results_name='GO_full_results')
-    enrichment_overlap(enrichment_list,ylab='',colnames=TRUE,
-                       outfolder_location=paste(outfolder_location,'enrichment/overlap_IEA_filtered/',sep=""),
-                       'GO_full_results_IEA_filtered', main_extra_info=' - IEA_filtered')
+
     connectivity_map_analysis(cmap_detailed_results, merged_detailed_results, outfolder_location, cmap_permuted_results_by_name,
                               cmap_permuted_results_by_celltype, cmap_permuted_results_by_ATC)
     result_list <- list('by_ATC'=cmap_permuted_results_by_ATC, 'by_name'=cmap_permuted_results_by_name,'by_celltype'=cmap_permuted_results_by_celltype)
@@ -181,59 +130,4 @@ find_drugs <- function(microarray_data, datasets, outfolder_location_root, memor
   
   }
 }
-
-
-
-for (f in list.files(pattern="*.R")) {
-  if(f=="analysis_pipeline_groups.R"){next}
-  print(f)
-  source(f)
-}
-
-#### Step 1: Read in data. In this case we will use "airway" data from bioconductor
-count_data <- read.table('/Users/NPK/UMCG/git_projects/drug_prediction/example_data.txt',quote='',sep="\t",header=T)
-
-#### Step 2: Define first signature signatures
-
-# select which columns to use (these column names have to exist in the input data from Step 1)
-columns <- c('measured.1','measured.2','measured.3','control.1', 'control.2','control.3')
-# define which columns belong to the same group (e.g. control vs measured) by 
-# setting FIRST and SECOND. In this case control.1 + control.2 are group FIRST,
-# measured.1 is group SECOND
-sample_factor <- factor(as.character(c(
-  'SECOND','SECOND','SECOND','FIRST','FIRST','FIRST')
-))
-# add the data together to define the signature. name1 is the name of the first group of the signature
-# name2 is the name of the second signature. The combination of these will be used for output names
-# of files
-signature_1 <- list(columns=columns, f=sample_factor, name1='measured.1_measured.2_measured.3', name2='control.1_control.2_control.3')
-
-
-#### Step 3: Do the same thing for other signatures you might want to use
-
-# second signature
-columns <- c('measured.1','measured.2','control.1', 'control.2')
-sample_factor <- factor(as.character(c(
-  'SECOND','SECOND','FIRST','FIRST')
-))
-signature_2 <- list(columns=columns, f=sample_factor, name1='measured.2', name2='control.1_control.2')
-
-# third signature
-columns <- c('measured.1','measured.2','measured.3','measured.4','control.1', 'control.2','control.3','control.4')
-sample_factor <- factor(as.character(c(
-  'SECOND','SECOND','SECOND','SECOND','FIRST','FIRST','FIRST','FIRST')
-))
-signature_3 <- list(columns=columns, f=sample_factor, name1='all_measurements', name2='all_controls')
-
-#### Step 4: Combine the signatures into groups that belong together. 
-####         E.g. I want to search with signature 1 + signature 2 and
-####              with signature 3
-datasets <- list('signature_group_1'=list(signature_1, signature_2),
-                 'signature_group_2'=list(signature_3))
-
-#### Step 4: Search for drugs
-find_drugs(count_data, datasets, '/tmp/')
-
-
-
 

@@ -1,7 +1,8 @@
 
 get_connectivityMap <- function(up_grp, down_grp, signature_name, outfolder_detailed, outfolder_permuted){
   python_location <- find_python_cmd(minimum_version='3.0',required_modules=c('requests','re','html2text','argparse','http.cookiejar','urllib','bs4'))
-  py_loc = paste(python_location,'connectivityMap.py')
+  script_location <- paste(system.file(package="drugFinder"), "connectivityMap.py", sep="/")
+  py_loc = paste(python_location,script_location)
   outfile_detailed = paste(outfolder_detailed,signature_name,'.xls',sep="")
   outfile_permuted = paste(outfolder_permuted,signature_name,'.xls',sep="")
   # the read.tables are to check that the file is not empty
@@ -118,7 +119,7 @@ connectivity_map_ranking <- function(cmap_permuted_results_by_name, png_name){
   ranklist_df_rank_prod$rank <- 1:nrow(ranklist_df_rank_prod)
   ranklist_df_rank_prod$specificity_mean <- specificity_mean[rownames(ranklist_df_rank_prod)]
     ranklist_df_rank_prod <- ranking_stability(ranklist_df_rank_prod)
-  ######## plotting enrichment barplot ###########
+
   enrichment_df_copy[enrichment_df_copy < 0] <- -1
   enrichment_df_copy[enrichment_df_copy > 0] <- 1
   if(!file.exists(png_name)){
@@ -134,12 +135,6 @@ connectivity_map_ranking <- function(cmap_permuted_results_by_name, png_name){
     colnames(df.molten_positive) <- c('day','Drugs','Enrichment')
     df.molten_negative <- melt( enrichment_df_copy_negative, id.vars="day", value.name="Enrichment", variable.name="Drugs" )
     colnames(df.molten_negative) <- c('day','Drugs','Enrichment')
-    #ggplot() + 
-    #  geom_bar(data = df.molten_positive, aes(x=Drugs, y=Enrichment, fill=day),stat = "identity") +
-    #  geom_bar(data = df.molten_negative, aes(x=Drugs, y=Enrichment, fill=day),stat = "identity") +
-    #   theme(text = element_text(size=20), axis.text.x = element_text(angle=90, vjust=1))
-    #ggsave(png_name,height=12,width=30)
-   # print(paste('png written to:',png_name))
   }
   ################################################
   r_length <- length(colnames(ranklist_df_rank_prod))
@@ -153,8 +148,6 @@ connectivity_map_analysis <- function(cmap_detailed_results, merged_detailed_res
 
   # combined on p-value stuff
   merged_detailed_results <- do.call("rbind", cmap_detailed_results)
-  plot_detailed_connectivity_results(merged_detailed_results, paste(outfolder_location,'connectivity_map/',sep=''), 'merged_results')
-  
   merged_permuted_results_by_name <- do.call("rbind",cmap_permuted_results_by_name)
   merged_permuted_results_by_name_filtered <- merged_permuted_results_by_name[!merged_permuted_results_by_name$p=='---',]
   permuted_results_by_name_ordered_pvalue <- merged_permuted_results_by_name_filtered[order(merged_permuted_results_by_name_filtered$p),]
@@ -163,8 +156,7 @@ connectivity_map_analysis <- function(cmap_detailed_results, merged_detailed_res
               quote=FALSE, row.names=FALSE,sep='\t')
   write.table(permuted_results_by_name_unduplicate, file=paste(outfolder_location,'connectivity_map/permuted_results_by_name_unduplicate.xls',sep=""),
               quote=FALSE, row.names=FALSE,sep='\t')
-  plot_permuted_connectivity_results(list(merged=permuted_results_by_name_unduplicate), paste(outfolder_location,'connectivity_map/by_name/',sep=''), 'merged_results')
-  
+
   merged_permuted_results_by_celltype <- do.call("rbind",cmap_permuted_results_by_celltype)
   merged_permuted_results_by_celltype_filtered <- merged_permuted_results_by_celltype[!merged_permuted_results_by_celltype$p=='---',]
   permuted_results_by_celltype_ordered_pvalue <- merged_permuted_results_by_celltype_filtered[order(merged_permuted_results_by_celltype_filtered$p),]
@@ -173,8 +165,7 @@ connectivity_map_analysis <- function(cmap_detailed_results, merged_detailed_res
               quote=FALSE, row.names=FALSE,sep='\t')
   write.table(permuted_results_by_celltype_unduplicate, file=paste(outfolder_location,'connectivity_map/permuted_results_by_celltype_unduplicate.xls',sep=""),
               quote=FALSE, row.names=FALSE,sep='\t')
-  plot_permuted_connectivity_results(list(merged=permuted_results_by_celltype_unduplicate), paste(outfolder_location,'connectivity_map/by_celltype/',sep=''), 'merged_results')
-  
+
   merged_permuted_results_by_ATC <- do.call("rbind",cmap_permuted_results_by_ATC)
   merged_permuted_results_by_ATC_filtered <- merged_permuted_results_by_ATC[!merged_permuted_results_by_ATC$p=='---',]
   permuted_results_by_ATC_ordered_pvalue <- merged_permuted_results_by_ATC_filtered[order(merged_permuted_results_by_ATC_filtered$p),]
@@ -184,7 +175,6 @@ connectivity_map_analysis <- function(cmap_detailed_results, merged_detailed_res
   write.table(permuted_results_by_ATC_unduplicate, file=paste(outfolder_location,'connectivity_map/permuted_results_by_ATC_unduplicate.xls',sep=""),
               quote=FALSE, row.names=FALSE,sep='\t')
   
-  plot_permuted_connectivity_results(list(merged=permuted_results_by_ATC_unduplicate), paste(outfolder_location,'connectivity_map/by_ATC',sep=''), 'merged_results') 
 }
 
 
